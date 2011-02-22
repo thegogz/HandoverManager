@@ -1,0 +1,316 @@
+$$(
+   if (form.scontrolName) {
+        if (form.scontrolName.value) {
+          context.scontrolName = form.scontrolName.value;
+          context.current.validated = true;
+        } else {
+          context.current.question = "<font color=red>Invalid SControl name. </font> " +
+              "Please enter the name of your new SControl:",
+          context.current.validated = false;
+        }
+   } else {
+       context.current = {
+            question: "Please enter the name of your new SControl:",
+            name: "scontrolName",
+            type: "text"
+       };
+   }
+)$$
+
+$$(
+   if (form.sobjectTypeInput) {
+        if (form.sobjectTypeInput.value) {
+          context.sobjectTypeInput = form.sobjectTypeInput.value;
+          context.current.validated = true;
+        } else {
+          context.current.validated = false;
+        }
+   } else {
+        var res = sforce.connection.describeGlobal();
+       context.current = {
+            question: "Please select SObject type:",
+            name: "sobjectTypeInput",
+            type: "select",
+            options: res.getArray("types")
+       };
+   }
+)$$ 
+
+$$:
+//setup template variables
+var objectType = context.sobjectTypeInput;
+
+var layout = sforce.connection.describeLayout(objectType);
+var details = layout.layouts.detailLayoutSections;
+var relatedLists = layout.layouts.relatedLists;
+
+function getLayoutComponents(layoutItem) {
+    var layoutComponents = layoutItem.getArray("layoutComponents");
+    var result = [];
+    for (var i=0; i<layoutComponents.length; i++) {
+        var layoutComponent = layoutComponents[i];
+        if (layoutComponent.type === "Field") {
+          result.push("<span id=\"" + objectType + '.' + layoutComponent.value +
+            "\" dojoType=\"inlineEditBox\" onSave=\"saveHandler(\'" +
+             layoutComponent.value + "\')\"></span>");
+        } else if (layoutComponent.type === "Separator") {
+            result.push(layoutComponent.value + " ");
+        } else {
+            result.push("<!--unknow type " + layoutComponent + "-->");
+        }
+    }
+    return result.join("");
+}
+
+function getFields() {
+  var fields = [];
+
+  for(var i=0; i<details.length; i++) {
+    var detail = details[i];
+    var layoutRows = detail.getArray("layoutRows");
+    for(var j=0; j<layoutRows.length; j++) {
+      var layoutItems = layoutRows[j].getArray("layoutItems");
+      for(var k=0; k<layoutItems.length; k++) {
+        var layoutItem = layoutItems[k];
+        var layoutComponents = layoutItem.getArray("layoutComponents");
+        for (var l=0; l<layoutComponents.length; l++) {
+          var layoutComponent = layoutComponents[l];
+          if (layoutComponent.type === "Field") {
+            fields.push(layoutComponent.value);
+          }
+        }
+      }
+    }
+  }
+  return fields;
+}
+
+:$$
+
+<html>
+<head>
+    <script type="text/javascript" src="/soap/ajax/8.0/connection.js"></script>
+    <script type="text/javascript" src="/js/functions.js"></script>
+    <script src="/js/dojo/0.3.1/dojo.js"></script>
+
+    <script type="text/javascript">
+        function setup() {
+            if (!sforce.connection.sessionId) {
+                var sid = getCookie("sid");
+                if (sid) {
+                    sforce.connection.sessionId = sid;
+                } else {
+                    window.location = "/?startURL=" + window.location;
+                    return;
+                }
+            }
+
+            displayLastUpdated();
+        }
+    </script>
+
+
+    <script type="text/javascript">
+        dojo.require("dojo.widget.*");
+        dojo.require("dojo.widget.InlineEditBox");
+        dojo.require("dojo.event.*");
+        dojo.require("dojo.widget.TabContainer");
+        dojo.require("dojo.widget.LinkPane");
+        dojo.require("dojo.widget.ContentPane");
+        dojo.require("dojo.widget.LayoutContainer");
+
+
+        var currentId = null;
+
+        function saveHandler(fieldId) {
+            var editable = dojo.widget.byId("$$=objectType=$$." + fieldId);
+            var sobj = new sforce.SObject("$$=objectType=$$");
+            sobj.Id = currentId;
+            sobj[fieldId] = editable.text.value;
+            sforce.connection.update([sobj],
+               {onSuccess: saveSuccess, onFailure: saveFailed});
+        }
+
+        function saveSuccess(result) {
+            if (result[0].getBoolean("success")) {
+                setStatus("saved ...");
+            } else {
+                setStatus("saved failed");
+            }
+        }
+
+        function saveFailed(error) {
+            setStatus("OOPS something went wrong " + error);
+        }
+
+        function setStatus(message) {
+            document.getElementById("status").innerHTML = message;
+        }
+
+        function displayLastUpdated() {
+            doSearch();
+            var result = sforce.connection.query("select id from $$=objectType=$$ limit 1");
+            if (result.getArray("records").length == 1) {
+                display(result.getArray("records")[0].Id);
+            }
+        }
+
+        function doSearch() {
+            var filter = document.getElementById("search-input").value;
+
+            sforce.connection.query("select name,id from $$=objectType=$$ where name like '" +
+                                    filter + "%' limit 15", {
+                onSuccess : function(result) {
+                    var it = new sforce.QueryResultIterator(result);
+                    var sb = new sforce.StringBuffer();
+                    while (it.hasNext()) {
+                        var sobject = it.next();
+                        sb.append("<img src='/img/report.gif'/> ");
+                        sb.append(makeDisplayLink(sobject)).append("<br>");
+                    }
+                    document.getElementById("search.list.view").innerHTML = sb.toString();
+                },
+                onFailure : function (error) {
+                    document.getElementById("search.list.view").innerHTML =
+                    "oops something went wrong " + error;
+                }
+            });
+        }
+
+        function display(id) {
+
+            $$:var fields = getFields();
+               var fieldsStr = fields.join(",");
+            :$$
+            var res = sforce.connection.retrieve("$$=fieldsStr=$$", "$$=objectType=$$", [id]);
+
+            $$: for(var i=0; i<fields.length; i++) {var field = fields[i]:$$
+                var value = res[0]["$$=field=$$"];
+                if (value === null) {
+                    value = "<span class='editPrompt'>[$$=field=$$]</span>" ;
+                }
+                document.getElementById("$$=objectType=$$.$$=field=$$").innerHTML = value;
+            $$:}:$$
+
+            document.getElementById("$$=objectType=$$.title").innerHTML = res[0].Name;
+            currentId = id;
+        }
+
+        function makeDisplayLink(sobj) {
+            return "<a href='javascript: display(\"" + sobj.Id + "\"); void 0;'>" +
+                   sobj.Name + "</a>";
+        }
+
+        function handleSearchKeydown(e) {
+            if (e.keyCode == 13) { //enter
+                doSearch();
+            }
+        }
+
+        $$:for(var i=0; i<relatedLists.length; i++) { var relatedList = relatedLists[i]; :$$
+        function handle$$=relatedList.name=$$(panel, node) {
+            panel.setContent("called ... " +  "$$=relatedList.name=$$");
+        }
+        $$:}:$$
+        dojo.addOnLoad(setup);
+    </script>
+
+    <style type="text/css">
+       body, td {
+         margin:0px;
+         color:#333;
+       }
+
+       body {
+           background-repeat: repeat-x;
+           background-position: left top;
+           font-size: 75%;
+           font-family: 'Arial', 'Helvetica', sans-serif;
+           background-color: #FFF;
+       }
+
+       .searchBox {
+          padding:12px 8px 2px 8px;
+          background-color:#E8E8E8;
+          border-top:2px #FFF solid;
+          margin-bottom:10px;
+          font-size: 60%;
+        }
+
+        .detailPage {
+          margin-right:2px;
+          padding:6px 20px 0 20px;
+          background-color:#F3F3EC;
+        }
+
+        .detailPageBlock {
+          border-bottom:1px solid #E3DEB8;
+          width: 30%;
+        }
+
+        .labelCol {
+          padding:2px 10px 2px 2px;
+          text-align:right;
+          font-size: 75%;
+          font-weight: bold;
+          color:#333;
+          width: 20%;
+          border-bottom:1px solid #E3DEB8;
+        }
+
+        .titleBlock {
+            background-color: #4579B5;
+            border-color: #4579B5;
+            font-size: 100%;
+        }
+        .editPrompt {
+           font-size: 75%;
+           color: darkgray;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<table width="100%">
+    <tr>
+        <td width="20%" valign="top" class="searchBox">
+            <h3>Search</h3>
+            <input width="100" name="search-input"
+                   id="search-input" onkeydown="handleSearchKeydown(event)"></input>
+            <input type="submit" name="search-input-go"
+                   id="search-input-go" value="GO" onclick="doSearch()"/>
+
+            <div id="search.list.view"></div>
+        </td>
+        <td width="80%" valign="top">
+
+            <div id="detail.view" class="detailPage">
+               <div class="titleBlock">
+                 <h3>$$=objectType=$$: <span id="$$=objectType=$$.title"></span></h3>
+               </div>
+
+
+                <table width="100%" valign="top" border="0" cellpadding="0" cellspacing="0">
+                    $$:for(var i=0; i<details.length; i++) { var detail = details[i]; var layoutRows = detail.getArray("layoutRows"); :$$
+                        <!--<tr><td>$$:out.push(detail.heading);:$$</td></tr>-->
+                        $$:for(var j=0; j<layoutRows.length; j++) { var layoutItems = layoutRows[j].getArray("layoutItems"); :$$
+                          <tr>
+                              $$:for(var k=0; k<layoutItems.length; k++) { var layoutItem = layoutItems[k]; :$$
+                                <td class="labelCol">$$=layoutItem.label=$$</td>
+                                <td class="detailPageBlock">$$=getLayoutComponents(layoutItem)=$$</td>
+                              $$: } :$$
+                          </tr>
+                        $$: } :$$
+                    $$:}:$$
+                </table>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div id="status"></div>
+
+</body>
+</html>
