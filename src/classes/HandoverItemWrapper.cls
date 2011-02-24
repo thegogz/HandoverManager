@@ -1,9 +1,9 @@
 public class HandoverItemWrapper {
 	//Wrapper Class to hold handover Items and Related Functionality for Handover List
 	//the Item held in this object
-	Public Handover_Item__c item{get; set;}
+	public Handover_Item__c item{get; set;}
 	//Checkbox for Mass Updating
-	Public Boolean checked{get; set;} 
+	public Boolean checked{get; set;} 
 	
 	//constructor for object taking argument of an item
 	public HandoverItemWrapper(Handover_Item__c item){

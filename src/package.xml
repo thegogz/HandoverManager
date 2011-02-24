@@ -3,6 +3,7 @@
     <types>
         <members>HandoverExtension</members>
         <members>HandoverItemWrapper</members>
+        <members>ItemListWrapper</members>
         <name>ApexClass</name>
     </types>
     <types>

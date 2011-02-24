@@ -1,14 +1,16 @@
 public class HandoverExtension {
 	public Handover__c currentHandover {get; set;}
 	public Handover__c newhandover{get;set;}
-
+	public List<ItemListWrapper> items{get;set;}
 	//is new handover definition
 	public boolean isnewHandover{get; set;}
 	//Extension Constructor
 	public HandoverExtension(ApexPages.StandardController cont){
 		this.currentHandover = (Handover__c)cont.getRecord();
  		this.isnewHandover = false;
+ 		this.items = new List<ItemListWrapper>();
 	}
+	List<integer> mylist = new List<integer>();
 	
 	//create new handover method. Automatically sets the From/To based on Current Region
 	public pageReference createNew(){
@@ -32,84 +34,13 @@ public class HandoverExtension {
 		update currenthandover;
 		return null;
 	}
-		
-	//item wrapper list for use on page. 
-	public List<HandoverItemWrapper> items {
-		get{
-			List<HandoverItemWrapper> handoveritems = new List<HandoverItemWrapper>();
-			for(Handover_Item__c i: [Select h.Work_Item_IR__c, h.OwnerId, h.Name, h.type__c, h.LastModifiedDate, h.LastModifiedById, h.Id, h.Description_Notes__c, h.CreatedDate, h.CreatedById, h.Active__c From Handover_Item__c h where (h.Active__c = true OR h.LastModifiedDate >= LAST_N_DAYS:3)]){
-				if(i.type__c == 'Maintainance' && i.active__c){
-					hasMaintainanceItems = true;
-				} else if(i.type__c == 'Notice Board' && i.active__c){
-					hasNoticeBoardItems = true;
-				} else if(i.type__c == 'Primary' && i.active__c){
-					hasPrimaryItems = true;
-				} else if(i.type__c == 'Secondary' && i.active__c){
-					hasSecondaryItems = true;
-				} else {
-					hasInactiveItems = true; 
-				}
-				handoveritems.add(new HandoverItemWrapper(i));
-			}
-			return handoveritems;
-		} 
-		set;
-	}
-		
-	//has maintainance items (show maintainance list)
-	public boolean hasMaintainanceItems{
-		get{
-			if(hasMaintainanceItems == null){
-				return false;
-			} else {
-				return true;
-			}
+	
+	//create Item list
+	public static List<ItemListWrapper> populateItemLists(){
+		for(Handover_Item__c i: [Select h.Work_Item_IR__c, h.OwnerId, h.Name, h.type__c, h.LastModifiedDate, h.LastModifiedById, h.Id, h.Description_Notes__c, h.CreatedDate, h.CreatedById, h.Active__c From Handover_Item__c h where (h.Active__c = true OR h.LastModifiedDate >= LAST_N_DAYS:3)]){
+			 itemlistwrapper iw = new itemlistwrapper();
+			 
 		}
-		set;
-	}
-	//has Notice Board items (show Notice Board list)
-	public boolean hasNoticeBoardItems{
-		get{
-			if(hasNoticeBoardItems == null){
-				return false;
-			} else {
-				return true;
-			}
-		}
-		set;
-	}
-	//has Primary items (show Primary list)
-	public boolean hasPrimaryItems{
-		get{
-			if(hasPrimaryItems == null){
-				return false;
-			} else {
-				return true;
-			}
-		}
-		set;
-	}
-	//has Secondary items (show Secondary list)
-	public boolean hasSecondaryItems{
-		get{
-			if(hasSecondaryItems == null){
-				return false;
-			} else {
-				return true;
-			}
-		}
-		set;
-	}
-	//has Inactive items (show Inactive list)
-	public boolean hasInactiveItems{
-		get{
-			if(hasInactiveItems == null){
-				return false;
-			} else {
-				return true;
-			}
-		}
-		set;
-	}
-
+		return null;
+	}	
 }
