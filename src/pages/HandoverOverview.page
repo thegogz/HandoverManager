@@ -1,6 +1,6 @@
 <apex:page standardController="Handover__c" extensions="HandoverExtension" sidebar="false">
 <apex:pagemessages />
-<apex:form >
+	<apex:form >
 	<apex:outputPanel id="currentpanel">
 	<apex:pageblock title="Current Handover {!Handover__c.Name}" mode="maindetail" id="CurrentHandover">
 		<apex:pageBlockButtons location="top">
@@ -22,6 +22,9 @@
 	</apex:outputPanel>
 	<apex:outputPanel id="newPanel">
 	<apex:pageblock title="New Handover" mode="edit" rendered="{!isnewHandover}" id="NewHandover">
+		<apex:pageBlockButtons >
+			<apex:commandbutton Value="Save" action="{!newsave}" />
+		</apex:pageBlockButtons>
 		<apex:pageblocksection title="Handover From/To" collapsible="false">
 			<apex:inputField value="{!newhandover.Handover_From__c}"/>
 			<apex:inputField value="{!newhandover.Handover_To__c}"/>
@@ -33,67 +36,19 @@
 	</apex:pageblock>
 	</apex:outputPanel>
 	<apex:pageblock title="Handover Items" mode="detail">
-		<apex:repeat value="{!items}" var="i" id="repeatItems">
-			<apex:pageblockSection title="{!IF(HasMaintainanceItems,'Maintainance','')} Items" columns="1" rendered="{!hasMaintainanceItems}">
-				<apex:pageblocktable value="{!items}" var="i" style="width:100%">
-					<apex:column headerValue="Action" >
-						<apex:commandLink action="{!i.edit}" value="Edit" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-						<apex:commandLink action="{!i.activate_deactivate}" value="Remove" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
+		<apex:repeat value="{!groups}" var="g" id="repeatItems">
+			<apex:pageblockSection title="{!g} Items" columns="1">
+				<apex:pageblocktable value="{!CASE(g, 'Maintainance', Maintainance, 'Primary', Primary, 'Secondary', Secondary, 'Notice Board', NoticeBoard, 'Inactive', Inactive, Hack)}" var="i" style="width:100%">
+					<apex:column headerValue="Action" style="width:100px;" >
+						<apex:commandLink action="{!i.edit}" value="Edit" rendered="{!i.item.Active__c}"/>
+						&nbsp;
+						<apex:commandLink action="{!i.activate_deactivate}" value="Deactivate/Remove"/>
 					</apex:column>
-					<apex:column value="{!i.item.Work_Item_IR__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-					<apex:column value="{!i.item.Description_Notes__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-				</apex:pageblocktable>
-			</apex:pageblockSection>
+					<apex:column value="{!i.item.Work_Item_IR__c}" style="width:50px" />
+					<apex:column value="{!i.item.Description_Notes__c}" /> 
+				</apex:pageblocktable> 
+			</apex:pageblockSection> 
 		</apex:repeat>
-		<apex:pageblockSection title="Maintainance Items" columns="1" rendered="{!hasMaintainanceItems}">
-			<apex:pageblocktable value="{!items}" var="i" style="width:100%">
-				<apex:column headerValue="Action" >
-					<apex:commandLink action="{!i.edit}" value="Edit" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-					<apex:commandLink action="{!i.activate_deactivate}" value="Remove" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-				</apex:column>
-				<apex:column value="{!i.item.Work_Item_IR__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-				<apex:column value="{!i.item.Description_Notes__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Maintenance'}"/>
-			</apex:pageblocktable>
-		</apex:pageblockSection>
-		<apex:pageblockSection title="Notice Board" columns="1" rendered="{!hasNoticeBoardItems}">
-			<apex:pageblocktable value="{!items}" var="i" style="width:100%">
-				<apex:column headerValue="Action" >
-					<apex:commandLink action="{!i.edit}" value="Edit" rendered="{!i.item.Active__c && i.item.Type__c == 'Notice Board'}"/>
-					<apex:commandLink action="{!i.activate_deactivate}" value="Set Inactive" rendered="{!i.item.Active__c && i.item.Type__c == 'Notice Board'}"/>
-				</apex:column>
-				<apex:column value="{!i.item.Work_Item_IR__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Notice Board'}"/>
-				<apex:column value="{!i.item.Description_Notes__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Notice Board'}"/>
-			</apex:pageblocktable>
-		</apex:pageblockSection>
-		<apex:pageblockSection title="Primary Items" columns="1" rendered="{!hasPrimaryItems}">
-			<apex:pageblocktable value="{!items}" var="i" style="width:100%">
-				<apex:column headerValue="Action" >
-					<apex:commandLink action="{!i.activate_deactivate}" value="Set Inactive" rendered="{!i.item.Active__c && i.item.Type__c == 'Primary'}"/>
-					<apex:commandLink action="{!i.primary_secondary_switch}" value="Set As Secondary" rendered="{!i.item.Active__c && i.item.Type__c == 'Primary'}"/>
-				</apex:column>
-				<apex:column value="{!i.item.Work_Item_IR__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Primary'}"/>
-				<apex:column value="{!i.item.Description_Notes__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Primary'}"/>
-			</apex:pageblocktable>
-		</apex:pageblockSection>
-		<apex:pageblockSection title="Secondary Items" columns="1" rendered="{!hasSecondaryItems}">
-			<apex:pageblocktable value="{!items}" var="i" style="width:100%">
-				<apex:column headerValue="Action" >
-					<apex:commandLink action="{!i.activate_deactivate}" value="Set Inactive" rendered="{!i.item.Active__c && i.item.Type__c == 'Secondary'}"/>
-					<apex:commandLink action="{!i.primary_secondary_switch}" value="Set As Primary" rendered="{!i.item.Active__c && i.item.Type__c == 'Secondary'}"/>
-				</apex:column>
-				<apex:column value="{!i.item.Work_Item_IR__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Secondary'}"/>
-				<apex:column value="{!i.item.Description_Notes__c}" rendered="{!i.item.Active__c && i.item.Type__c == 'Secondary'}"/>
-			</apex:pageblocktable>
-		</apex:pageblockSection>
-		<apex:pageblockSection title="Inactive Items" columns="1" rendered="{!hasInactiveItems}">
-			<apex:pageblocktable value="{!items}" var="i" style="width:100%">
-				<apex:column headerValue="Action" >
-					<apex:commandLink action="{!i.activate_deactivate}" value="Set Active" rendered="{!NOT(i.item.Active__c) && i.item.Type__c != 'Maintenance' && i.item.Type__c != 'Notice Board'}"/>
-				</apex:column>
-				<apex:column value="{!i.item.Work_Item_IR__c}" rendered="{!NOT(i.item.Active__c) && i.item.Type__c != 'Maintenance' && i.item.Type__c != 'Notice Board'}"/>
-				<apex:column value="{!i.item.Description_Notes__c}" rendered="{!NOT(i.item.Active__c) && i.item.Type__c != 'Maintenance' && i.item.Type__c != 'Notice Board'}"/>
-			</apex:pageblocktable>
-		</apex:pageblockSection>
 	</apex:pageblock>
-</apex:form>
+</apex:form> 
 </apex:page>

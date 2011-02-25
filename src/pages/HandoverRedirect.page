@@ -1,0 +1,3 @@
+<apex:page controller="HandoverRedirect" action="{!redirect}" >
+
+</apex:page>

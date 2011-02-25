@@ -3,11 +3,13 @@
     <types>
         <members>HandoverExtension</members>
         <members>HandoverItemWrapper</members>
+        <members>HandoverRedirect</members>
         <members>ItemListWrapper</members>
         <name>ApexClass</name>
     </types>
     <types>
         <members>HandoverOverview</members>
+        <members>HandoverRedirect</members>
         <name>ApexPage</name>
     </types>
     <types>
