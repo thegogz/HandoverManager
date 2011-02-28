@@ -35,8 +35,16 @@
     <deploymentStatus>Deployed</deploymentStatus>
     <enableActivities>true</enableActivities>
     <enableFeeds>false</enableFeeds>
-    <enableHistory>false</enableHistory>
+    <enableHistory>true</enableHistory>
     <enableReports>true</enableReports>
+    <fields>
+        <fullName>Active_Until__c</fullName>
+        <externalId>false</externalId>
+        <label>Active Until</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <type>Date</type>
+    </fields>
     <fields>
         <fullName>Active__c</fullName>
         <defaultValue>true</defaultValue>
@@ -44,6 +52,7 @@
         <externalId>false</externalId>
         <inlineHelpText>If True, Item will appear on Handoff</inlineHelpText>
         <label>Active</label>
+        <trackHistory>false</trackHistory>
         <type>Checkbox</type>
     </fields>
     <fields>
@@ -51,6 +60,7 @@
         <externalId>false</externalId>
         <label>Description/Notes</label>
         <length>32000</length>
+        <trackHistory>false</trackHistory>
         <type>LongTextArea</type>
         <visibleLines>3</visibleLines>
     </fields>
@@ -77,6 +87,7 @@
             </picklistValues>
             <sorted>false</sorted>
         </picklist>
+        <trackHistory>false</trackHistory>
         <type>Picklist</type>
     </fields>
     <fields>
@@ -86,6 +97,7 @@
         <label>Work Item/IR</label>
         <length>10</length>
         <required>false</required>
+        <trackHistory>false</trackHistory>
         <type>Text</type>
         <unique>true</unique>
     </fields>
@@ -98,6 +110,7 @@
     <nameField>
         <displayFormat>HI-{MM}{DD}{000000}</displayFormat>
         <label>Item No</label>
+        <trackHistory>false</trackHistory>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Handover Items</pluralLabel>

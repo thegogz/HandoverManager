@@ -1,7 +1,7 @@
 public class HandoverExtension {
     public Handover__c currentHandover {get; set;}
     public Handover__c newhandover{get;set;}
-    public List<ItemListWrapper> imap {get;set;}
+    public List<ItemListWrapper> imap {get{return populateItemLists();}set;}
     //is new handover definition
     public boolean isnewHandover{get; set;}
     //Extension Constructor
@@ -29,6 +29,7 @@ public class HandoverExtension {
     	system.debug(newhandover); 
     	newhandover.Current__c = true;
     	currenthandover.Current__c = false;
+    	update currenthandover;
     	insert newhandover;
     	return null; 
     }
@@ -44,7 +45,7 @@ public class HandoverExtension {
     //create Item list
     public List<ItemListWrapper> populateItemLists(){
         Map<String, List<HandOverItemWrapper>> Items = new Map<String, List<HandOverItemWrapper>>();
-        for(Handover_Item__c i: [Select h.Work_Item_IR__c, h.OwnerId, h.Name, h.type__c, h.LastModifiedDate, h.LastModifiedById, h.Id, h.Description_Notes__c, h.CreatedDate, h.CreatedById, h.Active__c From Handover_Item__c h where (h.Active__c = true OR h.LastModifiedDate >= LAST_N_DAYS:3)]){
+        for(Handover_Item__c i: [Select h.Work_Item_IR__c, h.OwnerId, h.Name, h.type__c, h.LastModifiedDate, h.LastModifiedById, h.Id, h.CreatedDate, h.CreatedById, h.Active__c, h.Summary__c From Handover_Item__c h where (h.Active__c = true OR h.LastModifiedDate >= LAST_N_DAYS:3)]){
 			if(i.type__c == 'Maintainance' && i.active__c){
 				if(!items.containsKey('Maintainance')){
 					items.put('Maintainance',new List<HandOverItemWrapper>());

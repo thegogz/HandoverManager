@@ -35,20 +35,22 @@
 		</apex:pageblocksection>
 	</apex:pageblock>
 	</apex:outputPanel>
+	<apex:outputpanel id="ItemLists">
 	<apex:pageblock title="Handover Items" mode="detail">
-		<apex:repeat value="{!groups}" var="g" id="repeatItems">
-			<apex:pageblockSection title="{!g} Items" columns="1">
-				<apex:pageblocktable value="{!CASE(g, 'Maintainance', Maintainance, 'Primary', Primary, 'Secondary', Secondary, 'Notice Board', NoticeBoard, 'Inactive', Inactive, Hack)}" var="i" style="width:100%">
+		<apex:repeat value="{!imap}" var="list" id="repeatItems">
+			<apex:pageblockSection title="{!list.ItemType} Items" columns="1">
+				<apex:pageblocktable value="{!list.handoveritems}" var="i" style="width:100%">
 					<apex:column headerValue="Action" style="width:100px;" >
-						<apex:commandLink action="{!i.edit}" value="Edit" rendered="{!i.item.Active__c}"/>
+						<apex:commandLink action="{!i.edit}" value="Edit" rerender="ItemLists"/>
 						&nbsp;
-						<apex:commandLink action="{!i.activate_deactivate}" value="Deactivate/Remove"/>
+						<apex:commandLink action="{!i.activate_deactivate}" value="Deactivate/Remove" rerender="ItemLists"/>
 					</apex:column>
 					<apex:column value="{!i.item.Work_Item_IR__c}" style="width:50px" />
 					<apex:column value="{!i.item.Description_Notes__c}" /> 
 				</apex:pageblocktable> 
 			</apex:pageblockSection> 
-		</apex:repeat>
+		</apex:repeat> 
 	</apex:pageblock>
+	</apex:outputpanel>
 </apex:form> 
 </apex:page>

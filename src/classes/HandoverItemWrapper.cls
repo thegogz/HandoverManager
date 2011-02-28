@@ -33,9 +33,15 @@ public class HandoverItemWrapper {
 	}
 	
 	public PageReference edit(){
-		PageReference editItem = new ApexPages.StandardController(item).view();
+		PageReference editItem = new ApexPages.StandardController(item).edit();
 		editItem.setRedirect(true);
 		return editItem;
 	}
-
+	
+	public PageReference more(){
+		PageReference viewItem = new ApexPages.StandardController(item).view();
+		viewItem.setRedirect(true);
+		return viewItem;
+	}
+	
 }
